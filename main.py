@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
+from typing import Optional
 import csv
 
 app = FastAPI()
@@ -21,8 +22,9 @@ with open("q-fastapi.csv", newline="") as csvfile:
         })
 
 @app.get("/api")
-def get_students(class_: list[str] = Query(default=None, alias="class")):
+def get_students(class_: Optional[str] = Query(default=None, alias="class")):
     if class_:
-        filtered = [s for s in students if s["class"] in class_]
+        classes = class_.split(",")  # Split comma-separated string into list
+        filtered = [s for s in students if s["class"] in classes]
         return {"students": filtered}
     return {"students": students}
