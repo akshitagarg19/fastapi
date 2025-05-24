@@ -11,7 +11,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load CSV
 students = []
 with open("q-fastapi.csv", newline="") as csvfile:
     reader = csv.DictReader(csvfile, delimiter="\t")
