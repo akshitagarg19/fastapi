@@ -4,7 +4,6 @@ import csv
 
 app = FastAPI()
 
-# Enable CORS for all origins and GET requests
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -12,17 +11,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Read students data from CSV
+# Load CSV
 students = []
-with open("students.csv", newline="") as csvfile:
-    reader = csv.DictReader(csvfile)
+with open("q-fastapi.csv", newline="") as csvfile:
+    reader = csv.DictReader(csvfile, delimiter="\t")
     for row in reader:
         students.append({
             "studentId": int(row["studentId"]),
             "class": row["class"]
         })
 
-# /api endpoint
 @app.get("/api")
 def get_students(class_: list[str] = Query(default=None, alias="class")):
     if class_:
