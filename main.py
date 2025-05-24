@@ -1,56 +1,31 @@
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
-import pandas as pd
-from typing import List, Optional
+import csv
 
-# Initialize FastAPI app
 app = FastAPI()
 
-# Enable CORS
+# Enable CORS for all origins and GET requests
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins
-    allow_credentials=True,
-    allow_methods=["GET"],  # Only allow GET requests
+    allow_origins=["*"],
+    allow_methods=["GET"],
     allow_headers=["*"],
 )
 
-# Load the CSV file
-df = pd.read_csv("q-fastapi.csv")
-
-# Convert DataFrame to the expected format
-def get_students_data(class_filters=None):
-    # If class filters are provided, filter the dataframe
-    if class_filters:
-        filtered_df = df[df['class'].isin(class_filters)]
-    else:
-        filtered_df = df
-    
-    # Convert to list of dictionaries
-    students = []
-    for _, row in filtered_df.iterrows():
+# Read students data from CSV
+students = []
+with open("students.csv", newline="") as csvfile:
+    reader = csv.DictReader(csvfile)
+    for row in reader:
         students.append({
             "studentId": int(row["studentId"]),
             "class": row["class"]
         })
-    
-    return students
 
+# /api endpoint
 @app.get("/api")
-async def get_students(class_param: Optional[List[str]] = Query(None, alias="class")):
-    """
-    Get student data.
-    Optional query parameter 'class' to filter by class (can be used multiple times).
-    Example: /api?class=1A&class=1B
-    """
-    students = get_students_data(class_param)
+def get_students(class_: list[str] = Query(default=None, alias="class")):
+    if class_:
+        filtered = [s for s in students if s["class"] in class_]
+        return {"students": filtered}
     return {"students": students}
-
-@app.get("/")
-async def root():
-    return {"message": "Student API is running. Use /api endpoint to get student data."}
-
-# Run the application directly if executed as a script
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True) 
